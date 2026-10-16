@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 /**
@@ -21,12 +22,13 @@ public class Catapult_tuning extends LinearOpMode {
 
     // our DC motor
     DcMotorEx catapult;
+    DcMotorEx catapult2;
 
-    public double NEW_P = 25;
-    public double NEW_PP = 1.2;
-    public static final double NEW_I = 0;
-    public static final double NEW_D = 0;
-    public double NEW_F = 670;
+    public double NEW_P = 10.5;
+    public double NEW_PP = 1.1;
+    public double NEW_I = 0;
+    public double NEW_D = -1.7;
+    public double NEW_F = 579;
     // These values are for illustration only; they must be set
     // and adjusted for each motor based on its planned usage.
     public double set_angle_degrees = 0;
@@ -38,6 +40,7 @@ public class Catapult_tuning extends LinearOpMode {
         // Since we are using the Control Hub or Expansion Hub,
         // cast this motor to a DcMotorEx object.
         catapult = (DcMotorEx)hardwareMap.get(DcMotor.class, "testShooterMotor");
+        catapult2 = (DcMotorEx)hardwareMap.get(DcMotor.class, "testMotor2");
 //        FtcDashboard dashboard = FtcDashboard.getInstance();
 //        telemetry = dashboard.getTelemetry();
 
@@ -49,51 +52,83 @@ public class Catapult_tuning extends LinearOpMode {
         catapult.setTargetPosition(setposition);
         catapult.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
+        catapult2.setPower(1
+    .0);
+        catapult2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        catapult2.setDirection(DcMotor.Direction.REVERSE); // direrction good
+        catapult2.setTargetPosition(setposition);
+        catapult2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
         // Get the PIDF coefficients for the RUN_TO_POSITION RunMode.
         PIDFCoefficients pidfOrig = catapult.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
+
 
         // Change coefficients using methods included with DcMotorEx class.
         PIDFCoefficients pidfNew = new PIDFCoefficients(NEW_P, NEW_I, NEW_D, NEW_F);
         catapult.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
+        catapult2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
+
 
         catapult.setPositionPIDFCoefficients(NEW_PP);
+        catapult2.setPositionPIDFCoefficients(NEW_PP);
 
         // Re-read coefficients and verify change.
         PIDFCoefficients pidfModified = catapult.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
         catapult.setTargetPosition(setposition);
+        catapult2.setTargetPosition(setposition);
 
         // display info to user
         while(opModeIsActive()) {
 
-            if (gamepad1.right_bumper){
-                NEW_F += 1;
+            if (gamepad1.aWasPressed()){
+                if (set_angle_degrees > 50) {
+                    set_angle_degrees = 0;
+                }
+                else if (set_angle_degrees < 50){
+                    set_angle_degrees = 110;}
             }
+
             if (gamepad1.left_bumper){
                 NEW_F -= 1;
             }
+            if (gamepad1.right_bumper){
+                NEW_F += 1;
+            }
 
             if (gamepad1.right_trigger > 0.5){
-                NEW_PP += 0.1;
+                NEW_PP += 0.01;
             }
             if (gamepad1.left_trigger > 0.5){
-                NEW_PP -= 0.1;
+                NEW_PP -= 0.01;
             }
 
-            if (gamepad1.aWasPressed()){
-                if (set_angle_degrees > 75) {
-                    set_angle_degrees = 20;
-                }
-                else if (set_angle_degrees < 75){
-                    set_angle_degrees = 100;
-                }
+            if (gamepad1.dpad_left){
+                NEW_P -= 0.01;
             }
+            if (gamepad1.dpad_right){
+                NEW_P += 0.01;
+            }
+
+            if (gamepad1.dpad_up){
+                NEW_D += 0.01;
+            }
+            if (gamepad1.dpad_down){
+                NEW_D -= 0.01;
+            }
+
+
             setposition =  (int)(set_angle_degrees * TICKS_PER_DEGREE);
 
             pidfNew = new PIDFCoefficients(NEW_P, NEW_I, NEW_D, NEW_F);
             catapult.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
 
+            catapult2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
+
             catapult.setPositionPIDFCoefficients(NEW_PP);
             catapult.setTargetPosition(setposition);
+
+            catapult2.setPositionPIDFCoefficients(NEW_PP);
+            catapult2.setTargetPosition(setposition);
 
             pidfModified = catapult.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
 
@@ -104,8 +139,11 @@ public class Catapult_tuning extends LinearOpMode {
                     pidfModified.p, pidfModified.i, pidfModified.d, pidfModified.f);
             telemetry.addData("New PP",  NEW_PP);
             telemetry.addData("New F",  NEW_F);
-            telemetry.addData("catapult get positon",  catapult.getCurrentPosition());
-            telemetry.addData("setposition",  setposition);
+            telemetry.addData("New D",  NEW_D);
+            telemetry.addData("New P",  NEW_P);
+            telemetry.addData("catapult get angle",  catapult.getCurrentPosition()/TICKS_PER_DEGREE);
+            telemetry.addData("catapult get angle 2",  catapult2.getCurrentPosition()/TICKS_PER_DEGREE);
+            telemetry.addData("setangledegrees", set_angle_degrees);
             telemetry.update();
         }
     }
