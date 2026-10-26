@@ -39,8 +39,8 @@ public class Catapult_tuning extends LinearOpMode {
         // Get reference to DC motor.
         // Since we are using the Control Hub or Expansion Hub,
         // cast this motor to a DcMotorEx object.
-        catapult = (DcMotorEx)hardwareMap.get(DcMotor.class, "testShooterMotor");
-        catapult2 = (DcMotorEx)hardwareMap.get(DcMotor.class, "testMotor2");
+        catapult = (DcMotorEx)hardwareMap.get(DcMotor.class, "catapult0");
+        catapult2 = (DcMotorEx)hardwareMap.get(DcMotor.class, "catapult1");
 //        FtcDashboard dashboard = FtcDashboard.getInstance();
 //        telemetry = dashboard.getTelemetry();
 
@@ -52,8 +52,7 @@ public class Catapult_tuning extends LinearOpMode {
         catapult.setTargetPosition(setposition);
         catapult.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        catapult2.setPower(1
-    .0);
+        catapult2.setPower(1.0);
         catapult2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         catapult2.setDirection(DcMotor.Direction.REVERSE); // direrction good
         catapult2.setTargetPosition(setposition);
@@ -81,11 +80,18 @@ public class Catapult_tuning extends LinearOpMode {
         while(opModeIsActive()) {
 
             if (gamepad1.aWasPressed()){
-                if (set_angle_degrees > 50) {
+                if (set_angle_degrees < -50) {
                     set_angle_degrees = 0;
+                    catapult.setPower(0.1);
+                    catapult2.setPower(0.1);
+                    NEW_F= 178;
                 }
-                else if (set_angle_degrees < 50){
-                    set_angle_degrees = 110;}
+                else if (set_angle_degrees > -50){
+                    catapult.setPower(1);
+                    catapult2.setPower(1);
+                    set_angle_degrees = -95;
+                    NEW_F= 579;
+                }
             }
 
             if (gamepad1.left_bumper){
