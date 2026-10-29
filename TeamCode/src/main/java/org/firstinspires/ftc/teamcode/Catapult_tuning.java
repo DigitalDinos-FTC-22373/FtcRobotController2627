@@ -23,7 +23,7 @@ public class Catapult_tuning extends LinearOpMode {
     // our DC motor
     DcMotorEx catapult;
     DcMotorEx catapult2;
-
+    DcMotorEx intake;
     public double NEW_P = 10.5;
     public double NEW_PP = 1.1;
     public double NEW_I = 0;
@@ -33,6 +33,7 @@ public class Catapult_tuning extends LinearOpMode {
     // and adjusted for each motor based on its planned usage.
     public double set_angle_degrees = 0;
     public final double TICKS_PER_DEGREE= 537.7/360;
+    public boolean IntakeOn = false;
     public int setposition =  (int)(set_angle_degrees * TICKS_PER_DEGREE);
 
     public void runOpMode() {
@@ -41,6 +42,8 @@ public class Catapult_tuning extends LinearOpMode {
         // cast this motor to a DcMotorEx object.
         catapult = (DcMotorEx)hardwareMap.get(DcMotor.class, "catapult0");
         catapult2 = (DcMotorEx)hardwareMap.get(DcMotor.class, "catapult1");
+
+        intake = (DcMotorEx)hardwareMap.get(DcMotor.class, "intake");
 //        FtcDashboard dashboard = FtcDashboard.getInstance();
 //        telemetry = dashboard.getTelemetry();
 
@@ -57,6 +60,10 @@ public class Catapult_tuning extends LinearOpMode {
         catapult2.setDirection(DcMotor.Direction.REVERSE); // direrction good
         catapult2.setTargetPosition(setposition);
         catapult2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+        intake.setPower(0);
+        intake.setDirection(DcMotorSimple.Direction.FORWARD);
 
         // Get the PIDF coefficients for the RUN_TO_POSITION RunMode.
         PIDFCoefficients pidfOrig = catapult.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
@@ -92,6 +99,15 @@ public class Catapult_tuning extends LinearOpMode {
                     set_angle_degrees = -95;
                     NEW_F= 579;
                 }
+            }
+
+            if(gamepad1.bWasPressed() && IntakeOn == false){
+                IntakeOn = true;
+                intake.setPower(1);
+            }
+            else if (gamepad1.bWasPressed() && IntakeOn == true){
+                IntakeOn = false;
+                intake.setPower(0);
             }
 
             if (gamepad1.left_bumper){
